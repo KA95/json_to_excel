@@ -5,10 +5,8 @@ import model.Category;
 import model.Item;
 import model.Vendor;
 import model.WarrantyInfo;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -21,40 +19,17 @@ import java.util.logging.Level;
 @Log
 public class ExcelHelper {
 
-    public static void createExcelFileWithCategories(List<Category> categories) throws IOException {
-        Workbook wb = new HSSFWorkbook();
-        Sheet sheet = wb.createSheet("new sheet");
-        Row headerRow = sheet.createRow(0);
-        headerRow.createCell(0).setCellValue("id");
-        headerRow.createCell(1).setCellValue("name");
-        short currentRow = 1;
-        for (Category category : categories) {
-            Row row = sheet.createRow(currentRow);
-            row.createCell(0).setCellValue(category.id);
-            row.createCell(1).setCellValue(category.name);
-            currentRow++;
-        }
-
-        FileOutputStream fileOut = new FileOutputStream("D:\\categories.xls");
-        wb.write(fileOut);
-        fileOut.close();
-    }
-
-
-    public static void createExcelFileWithCategoryItems(List<Item> items, Set<String> customFields) throws IOException {
-        Workbook wb = new HSSFWorkbook();
-        Sheet sheet = wb.createSheet("new sheet");
-        Row headerRow = sheet.createRow(0);
+    public static int addExcelRowsWithCategoryItems(Sheet sheet, List<Item> items, Set<String> customFields, int currentRow) throws IOException {
+        Row headerRow = sheet.createRow(currentRow++);
         fillItemHeaderRow(headerRow, customFields);
-        short currentRow = 1;
         for (Item item : items) {
             Row row = sheet.createRow(currentRow++);
             fillItemProperties(item, row, customFields);
+            if(currentRow % 100 == 0) {
+                log.log(Level.INFO, String.valueOf(currentRow));
+            }
         }
-
-        FileOutputStream fileOut = new FileOutputStream("D:\\items.xls");
-        wb.write(fileOut);
-        fileOut.close();
+        return currentRow;
     }
 
     private static void fillItemHeaderRow(Row headerRow, Set<String> customFields) {
@@ -74,6 +49,7 @@ public class ExcelHelper {
         int currentCell = 0;
         for (Field field : Item.class.getDeclaredFields()) {
             try {
+
                 if ("shortDescription".equals(field.getName())) {
                     for (String customField : customFields) {
                         String customValue = item.shortDescription.containsKey(customField)
@@ -84,11 +60,17 @@ public class ExcelHelper {
                 } else if ("vendor".equals(field.getName())) {
                     row.createCell(currentCell++).setCellValue(((Vendor) field.get(item)).name);
                 } else if ("warrantyInfo".equals(field.getName())) {
-                    row.createCell(currentCell++).setCellValue(((WarrantyInfo) field.get(item)).warrantyJson.toString());
+                    Object fieldValue = field.get(item);
+                    if(fieldValue == null) {
+                        row.createCell(currentCell++).setCellValue("");
+                    } else {
+                        row.createCell(currentCell++).setCellValue(((WarrantyInfo) fieldValue).warrantyJson.toString());
+                    }
                 } else if ("category".equals(field.getName())) {
                     row.createCell(currentCell++).setCellValue(((Category) field.get(item)).name);
                 } else {
-                    row.createCell(currentCell++).setCellValue(field.get(item).toString());
+                    Object fieldValue = field.get(item);
+                    row.createCell(currentCell++).setCellValue(fieldValue == null ? "" : fieldValue.toString());
                 }
             } catch (IllegalAccessException e) {
                 log.log(Level.WARNING, "Illegal access at field: " + field.getName());

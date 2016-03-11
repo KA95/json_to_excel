@@ -58,38 +58,39 @@ public class JSONHelper {
         return new Item(
                 itemObject.getLong("id"),
                 parseJSONToVendor(itemObject.getJSONObject("vendor")),
-                itemObject.getString("model"),
-                itemObject.getString("typePrefix"),
-                itemObject.getString("linkRewrite"),
-                itemObject.getString("price"),
-                itemObject.getString("priceCurrency"),
-                itemObject.getLong("status"),
-                itemObject.getLong("isNew"),
-                itemObject.getString("image"),
-                parseJSONToCategory(itemObject.getJSONObject("category")),
-                parseJSONToWarrantyInfo(itemObject.getJSONObject("warrantyInfo")),
-                parseJSONToShortDescription(itemObject.getJSONArray("shortDescriptionFeatures"))
+                getString(itemObject, "model"),
+                getString(itemObject, "typePrefix"),
+                getString(itemObject, "linkRewrite"),
+                getString(itemObject, "price"),
+                getString(itemObject, "priceCurrency"),
+                getLong(itemObject, "status"),
+                getLong(itemObject, "isNew"),
+                getString(itemObject, "image"),
+                parseJSONToCategory(getJSONObject(itemObject, "category")),
+                parseJSONToWarrantyInfo(getJSONObject(itemObject, "warrantyInfo")),
+                parseJSONToShortDescription(getJSONArray(itemObject, "shortDescriptionFeatures"))
         );
     }
 
     private static WarrantyInfo parseJSONToWarrantyInfo(JSONObject warrantyObject) {
+        if (warrantyObject == null) return null;
         return new WarrantyInfo(
-                warrantyObject.getString("country"),
-                warrantyObject.getLong("lifeMonth"),
-                warrantyObject.getString("warranty"),
-                warrantyObject.has("warrantyMonth") ?
-                        warrantyObject.getLong("warrantyMonth") : null,
-                warrantyObject.getString("supplier"),
-                warrantyObject.getString("serviceCenters"),
-                warrantyObject.getString("manufacturer"),
+                getString(warrantyObject, "country"),
+                getLong(warrantyObject, "lifeMonth"),
+                getString(warrantyObject, "warranty"),
+                getLong(warrantyObject, "warrantyMonth"),
+                getString(warrantyObject, "supplier"),
+                getString(warrantyObject, "serviceCenters"),
+                getString(warrantyObject, "manufacturer"),
                 warrantyObject
         );
     }
 
     private static Vendor parseJSONToVendor(JSONObject vendorObject) {
+        if (vendorObject == null) return null;
         return new Vendor(
-                vendorObject.getLong("id"),
-                vendorObject.getString("name")
+                getLong(vendorObject, "id"),
+                getString(vendorObject, "name")
         );
     }
 
@@ -108,6 +109,22 @@ public class JSONHelper {
             result.put(field.getString("name"), values);
         }
         return result;
+    }
+
+    private static String getString(JSONObject o, String field) {
+        return o.has(field) ? o.getString(field) : null;
+    }
+
+    private static Long getLong(JSONObject o, String field) {
+        return o.has(field) ? o.getLong(field) : null;
+    }
+
+    private static JSONArray getJSONArray(JSONObject o, String field) {
+        return o.has(field) ? o.getJSONArray(field) : null;
+    }
+
+    private static JSONObject getJSONObject(JSONObject o, String field) {
+        return o.has(field) ? o.getJSONObject(field) : null;
     }
 
 }

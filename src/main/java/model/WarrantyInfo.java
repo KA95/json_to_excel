@@ -10,7 +10,7 @@ import org.json.JSONObject;
 @AllArgsConstructor
 public class WarrantyInfo {
     public String country;
-    public long lifeMonth;
+    public Long lifeMonth;
     public String warranty;
     public Long warrantyMonth;
     public String supplier;
